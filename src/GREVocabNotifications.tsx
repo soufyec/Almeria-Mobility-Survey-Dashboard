@@ -229,7 +229,7 @@ export default function GREVocabNotifications() {
   };
 
   const handleReveal = (idx: number) =>
-    setRevealed((prev) => new Set([...prev, idx]));
+    setRevealed((prev) => new Set(Array.from(prev).concat(idx)));
 
   const handleRevealAll = () =>
     setRevealed(new Set(todaySet.words.map((_, i) => i)));
