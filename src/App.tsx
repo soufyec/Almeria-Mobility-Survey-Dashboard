@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from "react";
+import GREVocabNotifications from "./GREVocabNotifications";
 import {
   BarChart,
   Bar,
@@ -1724,6 +1725,7 @@ const TABS = [
   { id: "criteria", l: "Criteria" },
   { id: "adoption", l: "Adoption & WTP" },
   { id: "segments", l: "Segments" },
+  { id: "gre", l: "📚 GRE Vocab" },
 ];
 
 export default function Dashboard() {
@@ -2423,6 +2425,12 @@ export default function Dashboard() {
           </>
         )}
       </div>
+
+      {tab === "gre" && (
+        <div style={{ maxWidth: 1100, margin: "0 auto", padding: "24px 16px" }}>
+          <GREVocabNotifications />
+        </div>
+      )}
 
       <div
         style={{
