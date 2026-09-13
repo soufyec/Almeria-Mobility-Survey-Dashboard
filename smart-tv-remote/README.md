@@ -29,9 +29,20 @@ un Raspberry Pi, un NAS o un contenedor Docker). Ese servidor sirve la web y hab
 - **PWA**: instalable en la pantalla de inicio (Android/iOS), modo oscuro, funciona en cualquier navegador.
 - **Multiusuario**: todos los móviles comparten una única conexión con la TV (la TV solo admite una).
 
-## Instalación rápida
+## Instalación rápida (portátil + iPhone)
 
-Requisitos: Node.js 18 o superior en un equipo que esté **en la misma red** que la TV.
+Requisitos: [Node.js](https://nodejs.org) (versión LTS) instalado en un portátil que esté **en la misma Wi‑Fi** que la TV.
+
+**Sin terminal:** descarga esta carpeta y haz doble clic en `Iniciar-Mando-TV.command` (Mac; la primera vez
+clic derecho → Abrir) o `Iniciar-Mando-TV.bat` (Windows). Instala lo necesario, arranca el servidor y abre
+la app en el navegador del portátil. En el iPhone abre la dirección que muestra la ventana o escanea el QR de
+**Ajustes → Invitar**. En Safari, usa **Compartir → Añadir a pantalla de inicio** para tenerla como app.
+
+Mientras la ventana esté abierta y el portátil despierto, todos los iPhone de la casa pueden usar el mando.
+Si el portátil se suspende, el mando deja de responder hasta que lo despiertes (ajusta la suspensión con la
+tapa abierta si quieres dejarlo en marcha).
+
+**Con terminal:**
 
 ```bash
 cd smart-tv-remote
