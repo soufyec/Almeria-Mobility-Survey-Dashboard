@@ -1,0 +1,14 @@
+services:
+  tv-remote:
+    build: .
+    container_name: samsung-tv-remote
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      PORT: "3000"
+      TV_IP: ""
+      REMOTE_NAME: "Mando Web"
+      ACCESS_PIN: ""
+      DATA_DIR: /data
+    volumes:
+      - ./data:/data

@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+  <meta name="theme-color" content="#0b0f17">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="mobile-web-app-capable" content="yes">
+  <title>Mando TV</title>
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="icon" href="/icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/icons/icon-192.png">
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <header class="top">
+    <div class="tv">
+      <span id="statusDot" class="dot"></span>
+      <div>
+        <div id="tvTitle" class="tv-title">Samsung TV</div>
+        <div id="tvSub" class="tv-sub">Sin configurar</div>
+      </div>
+    </div>
+    <div class="top-right">
+      <span id="clients" class="pill" title="Móviles conectados">👥 1</span>
+      <button id="btnPower" class="icon-btn danger" data-key="KEY_POWEROFF" title="Apagar">⏻</button>
+    </div>
+  </header>
+
+  <div id="banner" class="banner" hidden></div>
+
+  <main>
+    <!-- ================= MANDO ================= -->
+    <section id="tab-remote" class="tab active">
+      <div class="row quick">
+        <button class="key" data-key="KEY_SOURCE">Fuente</button>
+        <button class="key" data-key="KEY_CONTENTS">Smart Hub</button>
+        <button class="key" data-key="KEY_MENU">Menú</button>
+        <button class="key" data-key="KEY_GUIDE">Guía</button>
+      </div>
+
+      <div class="dpad-wrap">
+        <div class="dpad-mode">
+          <button id="modeButtons" class="seg active">Botones</button>
+          <button id="modeTouch" class="seg">Touchpad</button>
+        </div>
+
+        <div id="dpad" class="dpad">
+          <button class="key side" data-key="KEY_RETURN">↩<small>Atrás</small></button>
+          <button class="key dir up" data-key="KEY_UP">▲</button>
+          <button class="key side" data-key="KEY_EXIT">✕<small>Salir</small></button>
+          <button class="key dir left" data-key="KEY_LEFT">◀</button>
+          <button class="key ok" data-key="KEY_ENTER">OK</button>
+          <button class="key dir right" data-key="KEY_RIGHT">▶</button>
+          <button class="key side" data-key="KEY_INFO">ℹ<small>Info</small></button>
+          <button class="key dir down" data-key="KEY_DOWN">▼</button>
+          <button class="key side" data-key="KEY_TOOLS">🛠<small>Tools</small></button>
+        </div>
+
+        <div id="touchpad" class="touchpad" hidden>
+          <div class="touch-hint">Desliza para mover · Toca para OK</div>
+          <div class="touch-actions">
+            <button class="key" data-key="KEY_RETURN">↩ Atrás</button>
+            <button class="key" data-key="KEY_EXIT">✕ Salir</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="vol-card">
+        <div class="vol-head">
+          <span>🔊 Volumen</span>
+          <span id="volValue" class="vol-value">–</span>
+        </div>
+        <input id="volSlider" type="range" min="0" max="100" value="0" disabled>
+        <div class="row">
+          <button class="key" data-key="KEY_VOLDOWN">Vol −</button>
+          <button id="btnMute" class="key" data-key="KEY_MUTE">🔇 Silencio</button>
+          <button class="key" data-key="KEY_VOLUP">Vol +</button>
+        </div>
+      </div>
+
+      <div class="row">
+        <button class="key" data-key="KEY_CHDOWN">Canal −</button>
+        <button class="key" data-key="KEY_CH_LIST">Lista</button>
+        <button class="key" data-key="KEY_PRECH">Anterior</button>
+        <button class="key" data-key="KEY_CHUP">Canal +</button>
+      </div>
+
+      <div class="row media">
+        <button class="key" data-key="KEY_REWIND">⏪</button>
+        <button class="key" data-key="KEY_PLAY">▶</button>
+        <button class="key" data-key="KEY_PAUSE">⏸</button>
+        <button class="key" data-key="KEY_STOP">⏹</button>
+        <button class="key" data-key="KEY_FF">⏩</button>
+      </div>
+
+      <div class="row colors">
+        <button class="key c-red" data-key="KEY_RED">A</button>
+        <button class="key c-green" data-key="KEY_GREEN">B</button>
+        <button class="key c-yellow" data-key="KEY_YELLOW">C</button>
+        <button class="key c-blue" data-key="KEY_CYAN">D</button>
+      </div>
+
+      <details class="more">
+        <summary>Más teclas</summary>
+        <div id="moreKeys" class="grid3"></div>
+      </details>
+    </section>
+
+    <!-- ================= CANALES ================= -->
+    <section id="tab-channels" class="tab">
+      <div class="card">
+        <div class="card-title">Ir a canal</div>
+        <div id="chDisplay" class="ch-display">–</div>
+        <div class="numpad">
+          <button class="key num" data-digit="1">1</button>
+          <button class="key num" data-digit="2">2</button>
+          <button class="key num" data-digit="3">3</button>
+          <button class="key num" data-digit="4">4</button>
+          <button class="key num" data-digit="5">5</button>
+          <button class="key num" data-digit="6">6</button>
+          <button class="key num" data-digit="7">7</button>
+          <button class="key num" data-digit="8">8</button>
+          <button class="key num" data-digit="9">9</button>
+          <button id="chClear" class="key num muted">C</button>
+          <button class="key num" data-digit="0">0</button>
+          <button id="chGo" class="key num primary">Ir</button>
+        </div>
+        <div class="row">
+          <button class="key" data-key="KEY_TTX_MIX">Teletexto</button>
+          <button class="key" data-key="KEY_FAVCH">Favoritos</button>
+          <button class="key" data-key="KEY_SUB_TITLE">Subtítulos</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Fuentes</div>
+        <div id="sources" class="grid3"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Accesos rápidos <small>(secuencias de teclas)</small></div>
+        <div id="favorites" class="fav-list"></div>
+        <form id="favForm" class="fav-form">
+          <input id="favLabel" type="text" placeholder="Nombre (ej. La 1)" maxlength="30" required>
+          <input id="favKeys" type="text" placeholder="Teclas: 1 2 OK  o  KEY_HDMI1" required>
+          <button type="submit" class="key primary">Añadir</button>
+        </form>
+        <p class="hint">Puedes escribir dígitos y palabras como <b>OK</b>, <b>ATRAS</b>, <b>HDMI1</b>, <b>TV</b>, o códigos <b>KEY_…</b>.</p>
+      </div>
+    </section>
+
+    <!-- ================= MULTIMEDIA ================= -->
+    <section id="tab-media" class="tab">
+      <div class="card">
+        <div class="card-title">Enviar a la TV (DLNA)</div>
+        <p class="hint" id="castHint">Elige una foto, vídeo o canción de tu móvil y se verá en la TV.</p>
+        <label class="file-btn key primary">
+          📤 Elegir archivo y enviar
+          <input id="mediaFile" type="file" accept="image/*,video/*,audio/*" hidden>
+        </label>
+        <div id="uploadProgress" class="progress" hidden><div></div></div>
+        <form id="urlForm" class="url-form">
+          <input id="mediaUrl" type="url" placeholder="o pega una URL directa (mp4, jpg, mp3…)" required>
+          <button type="submit" class="key">Reproducir</button>
+        </form>
+      </div>
+      <div class="card">
+        <div class="card-title">Reproduciendo</div>
+        <div id="nowPlaying" class="now">Nada en reproducción</div>
+        <div class="row">
+          <button class="key" data-media="play">▶ Reanudar</button>
+          <button class="key" data-media="pause">⏸ Pausa</button>
+          <button class="key danger" data-media="stop">⏹ Parar</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Imagen y sonido</div>
+        <div id="pictureKeys" class="grid3"></div>
+      </div>
+    </section>
+
+    <!-- ================= AJUSTES ================= -->
+    <section id="tab-settings" class="tab">
+      <div class="card">
+        <div class="card-title">Televisor</div>
+        <div class="form">
+          <label>IP de la TV <input id="cfgIp" type="text" inputmode="decimal" placeholder="192.168.1.50"></label>
+          <label>Puerto <input id="cfgPort" type="number" value="55000"></label>
+          <label>Nombre del mando (lo verás en la TV) <input id="cfgName" type="text" maxlength="40" placeholder="Mando Web"></label>
+          <label>MAC de la TV (opcional, Wake-on-LAN) <input id="cfgMac" type="text" placeholder="AA:BB:CC:DD:EE:FF"></label>
+          <div class="row">
+            <button id="btnDiscover" class="key">🔍 Buscar TV</button>
+            <button id="btnSaveTv" class="key primary">Guardar</button>
+          </div>
+          <div id="discovered" class="disc-list"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Conexión</div>
+        <div id="connInfo" class="conn-info">–</div>
+        <div class="row">
+          <button id="btnConnect" class="key primary">Conectar / Emparejar</button>
+          <button id="btnDisconnect" class="key">Desconectar</button>
+          <button id="btnWake" class="key">⚡ WoL</button>
+        </div>
+        <p class="hint">La primera vez la TV mostrará un aviso <b>“¿Permitir?”</b>: acéptalo con el mando físico. Después ya no volverá a pedirlo.</p>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Invitar a otro móvil</div>
+        <p class="hint">Conectados a la misma Wi‑Fi, escanean este código o abren la dirección:</p>
+        <img id="qr" class="qr" alt="Código QR" src="/api/qr.png">
+        <div id="inviteUrl" class="invite-url"></div>
+        <button id="btnShare" class="key">📲 Compartir enlace</button>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Escribir texto <small>(experimental)</small></div>
+        <form id="textForm" class="url-form">
+          <input id="textInput" type="text" maxlength="200" placeholder="Texto para un campo de la TV">
+          <button type="submit" class="key">Enviar</button>
+        </form>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Acerca de</div>
+        <p class="hint">Mando web para Samsung Smart TV 2013 (serie F). Protocolo de mando en el puerto 55000 y UPnP/DLNA para volumen exacto y envío de contenido. Añade esta página a la pantalla de inicio para usarla como app.</p>
+      </div>
+    </section>
+  </main>
+
+  <nav class="tabs">
+    <button class="tab-btn active" data-tab="remote"><span>🎮</span>Mando</button>
+    <button class="tab-btn" data-tab="channels"><span>📺</span>Canales</button>
+    <button class="tab-btn" data-tab="media"><span>🎬</span>Multimedia</button>
+    <button class="tab-btn" data-tab="settings"><span>⚙️</span>Ajustes</button>
+  </nav>
+
+  <div id="toast" class="toast" hidden></div>
+
+  <div id="pinOverlay" class="overlay" hidden>
+    <form id="pinForm" class="pin-box">
+      <h2>Introduce el PIN</h2>
+      <input id="pinInput" type="password" inputmode="numeric" autocomplete="off" placeholder="PIN">
+      <button type="submit" class="key primary">Entrar</button>
+    </form>
+  </div>
+
+  <script src="/app.js"></script>
+</body>
+</html>

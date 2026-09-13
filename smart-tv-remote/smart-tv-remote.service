@@ -1,0 +1,18 @@
+# Ejemplo de unidad systemd (Raspberry Pi / Linux):
+#   sudo cp smart-tv-remote.service /etc/systemd/system/
+#   sudo systemctl enable --now smart-tv-remote
+[Unit]
+Description=Mando web Samsung Smart TV
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+WorkingDirectory=/opt/smart-tv-remote
+ExecStart=/usr/bin/node server/index.js
+Environment=PORT=3000
+Restart=always
+RestartSec=3
+User=pi
+
+[Install]
+WantedBy=multi-user.target
