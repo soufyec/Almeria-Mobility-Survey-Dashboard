@@ -211,7 +211,20 @@
 
       <div class="card">
         <div class="card-title">Invitar a otro móvil</div>
-        <p class="hint">Conectados a la misma Wi‑Fi, escanean este código o abren la dirección:</p>
+        <p class="hint"><b>1.</b> Que se conecte a tu Wi‑Fi o hotspot escaneando este código con la cámara:</p>
+        <div id="wifiBlock" hidden>
+          <img id="wifiQr" class="qr" alt="QR Wi‑Fi" src="">
+          <div id="wifiName" class="invite-url"></div>
+        </div>
+        <details class="more" id="wifiSetup">
+          <summary>Configurar red del QR</summary>
+          <div class="form">
+            <label>Nombre de la red (SSID) <input id="wifiSsid" type="text" maxlength="32" placeholder="iPhone de Sofía"></label>
+            <label>Contraseña <input id="wifiPass" type="password" maxlength="63" placeholder="(vacío si es abierta)"></label>
+            <button id="btnSaveWifi" class="key primary">Guardar</button>
+          </div>
+        </details>
+        <p class="hint"><b>2.</b> Ya en la red, que escanee este otro o abra la dirección:</p>
         <img id="qr" class="qr" alt="Código QR" src="/api/qr.png">
         <div id="inviteUrl" class="invite-url"></div>
         <button id="btnShare" class="key">📲 Compartir enlace</button>

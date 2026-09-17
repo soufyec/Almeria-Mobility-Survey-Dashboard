@@ -79,6 +79,7 @@
         case 'volume': if (state) { state.volume = msg; renderVolume(); } break;
         case 'clients': $('#clients').textContent = `👥 ${msg.clients}`; break;
         case 'error': toast(msg.message, 'error'); break;
+        case 'info': toast(msg.message); break;
         case 'auth': $('#pinOverlay').hidden = false; break;
         case 'sent': flash(msg.key); break;
       }
@@ -347,7 +348,17 @@
       $('#inviteUrl').textContent = inv.url;
       $('#qr').src = `/api/qr.png?t=${Date.now()}`;
     } catch (_) {}
+    const w = state?.config?.wifi;
+    const has = !!(w && w.ssid);
+    $('#wifiBlock').hidden = !has;
+    if (has) { $('#wifiQr').src = `/api/wifi-qr.png?t=${Date.now()}`; $('#wifiName').textContent = w.ssid; $('#wifiSsid').value = w.ssid; }
+    $('#wifiSetup').open = !has;
   }
+  $('#btnSaveWifi').onclick = () => {
+    api('/api/wifi', { method: 'POST', body: { ssid: $('#wifiSsid').value.trim(), password: $('#wifiPass').value } })
+      .then(() => { $('#wifiPass').value = ''; toast('Red guardada', 'ok'); setTimeout(refreshInvite, 300); })
+      .catch((err) => toast(err.message, 'error'));
+  };
   $('#btnShare').onclick = async () => {
     const url = $('#inviteUrl').textContent || location.href;
     if (navigator.share) { try { await navigator.share({ title: 'Mando TV', text: 'Controla la tele desde tu móvil', url }); } catch (_) {} }

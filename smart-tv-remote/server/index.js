@@ -60,8 +60,8 @@ app.post('/api/auth', (req, res) => {
 
 // ---------------------------------------------------------------- Estado / WS
 function publicConfig() {
-  const { services, ...rest } = config;
-  return { ...rest, hasUpnp: !!upnp.rc, hasCast: !!upnp.avt, pinRequired: !!ACCESS_PIN };
+  const { services, wifi, ...rest } = config;
+  return { ...rest, wifi: { ssid: wifi?.ssid || '', hasPassword: !!wifi?.password }, hasUpnp: !!upnp.rc, hasCast: !!upnp.avt, pinRequired: !!ACCESS_PIN };
 }
 function state() {
   return {
@@ -119,6 +119,35 @@ wss.on('connection', (ws, req) => {
   ws.on('close', () => broadcast({ type: 'clients', clients: wss.clients.size }));
 });
 
+// ---------------------------------------------------------------- Auto-redescubrimiento
+// En redes tipo hotspot la IP de la TV cambia a menudo: si no responde, la buscamos de nuevo.
+let rediscovering = null;
+async function rediscoverTv(reason) {
+  if (rediscovering) return rediscovering;
+  rediscovering = (async () => {
+    broadcast({ type: 'info', message: 'La TV no responde; buscándola de nuevo en la red…' });
+    try {
+      const tvs = await discoverTVs({ timeout: 3000 });
+      const match = tvs.find((t) => config.tvModel && t.model === config.tvModel) || tvs[0];
+      if (match && match.ip !== config.tvIp) {
+        console.log(`TV encontrada en nueva IP ${match.ip} (antes ${config.tvIp}) [${reason}]`);
+        config.tvIp = match.ip;
+        config.tvName = match.name || config.tvName;
+        config.tvModel = match.model || config.tvModel;
+        config.services = match.services;
+        upnp = new TvUpnp(config.services);
+        configStore.save(config);
+        buildRemote();
+        broadcast({ type: 'info', message: `TV encontrada en ${match.ip}` });
+        broadcastState();
+        return true;
+      }
+    } catch (_) { /* sin multicast */ }
+    return false;
+  })().finally(() => { rediscovering = null; });
+  return rediscovering;
+}
+
 // ---------------------------------------------------------------- Helpers
 function requireRemote() {
   if (!remote) { const e = new Error('Configura primero la IP de la TV (Ajustes)'); e.status = 409; throw e; }
@@ -130,7 +159,15 @@ async function pressKeys(keys) {
     if (!ALL_KEYS.has(k) && !/^KEY_[A-Z0-9_]+$/.test(k)) throw Object.assign(new Error(`Tecla no válida: ${k}`), { status: 400 });
   }
   const results = [];
-  for (const k of keys) results.push(await r.sendKey(k));
+  try {
+    for (const k of keys) results.push(await r.sendKey(k));
+  } catch (err) {
+    if (remote && remote.state === STATES.UNREACHABLE && (await rediscoverTv('tecla'))) {
+      for (const k of keys.slice(results.length)) results.push(await remote.sendKey(k));
+      return results;
+    }
+    throw err;
+  }
   return results;
 }
 const wrap = (fn) => (req, res) => Promise.resolve(fn(req, res)).catch((e) => {
@@ -142,7 +179,12 @@ app.get('/api/state', (req, res) => res.json(state()));
 app.get('/api/keys', (req, res) => res.json(KEYS));
 
 app.post('/api/connect', wrap(async (req, res) => {
-  await requireRemote().connect();
+  try {
+    await requireRemote().connect();
+  } catch (err) {
+    if (remote && remote.state === STATES.UNREACHABLE && (await rediscoverTv('conectar'))) await remote.connect();
+    else throw err;
+  }
   res.json({ ok: true, remote: remote.snapshot() });
 }));
 app.post('/api/disconnect', wrap(async (req, res) => {
@@ -336,6 +378,21 @@ app.get('/api/qr.png', wrap(async (req, res) => {
   res.setHeader('Content-Type', 'image/png');
   res.send(await QRCode.toBuffer(url, { width: 320, margin: 1 }));
 }));
+// QR de Wi‑Fi / hotspot para invitados (formato estándar que entienden iPhone y Android)
+app.post('/api/wifi', wrap(async (req, res) => {
+  config.wifi = { ssid: String(req.body.ssid || '').slice(0, 32), password: String(req.body.password || '').slice(0, 63) };
+  configStore.save(config);
+  broadcastState();
+  res.json({ ok: true, wifi: { ssid: config.wifi.ssid, hasPassword: !!config.wifi.password } });
+}));
+app.get('/api/wifi-qr.png', wrap(async (req, res) => {
+  const w = config.wifi || {};
+  if (!w.ssid) return res.status(404).json({ error: 'Sin red configurada' });
+  const escq = (t) => String(t).replace(/([\\;,:"])/g, '\\$1');
+  const payload = w.password ? `WIFI:T:WPA;S:${escq(w.ssid)};P:${escq(w.password)};;` : `WIFI:T:nopass;S:${escq(w.ssid)};;`;
+  res.setHeader('Content-Type', 'image/png');
+  res.send(await QRCode.toBuffer(payload, { width: 320, margin: 1 }));
+}));
 app.get('/api/invite', (req, res) => {
   const local = pickLocalAddress(config.tvIp);
   res.json({ url: `http://${local.address}:${PORT}/`, addresses: lanInterfaces().map((i) => `http://${i.address}:${PORT}/`) });
@@ -364,6 +421,15 @@ server.listen(PORT, '0.0.0.0', () => {
   console.log('TV configurada:', config.tvIp || '(ninguna, usa Ajustes → Buscar TV)');
   if (ACCESS_PIN) console.log('Acceso protegido con PIN.');
 });
+
+// Al arrancar (p. ej. con hotspot), comprobar si la TV cambió de IP.
+setTimeout(async () => {
+  if (!config.tvIp) return;
+  try {
+    const probed = await probeSamsung(config.tvIp);
+    if (!probed) await rediscoverTv('arranque');
+  } catch (_) {}
+}, 1500);
 
 process.on('SIGINT', () => { if (remote) remote.disconnect(); process.exit(0); });
 process.on('SIGTERM', () => { if (remote) remote.disconnect(); process.exit(0); });
