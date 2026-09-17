@@ -60,8 +60,8 @@ app.post('/api/auth', (req, res) => {
 
 // ---------------------------------------------------------------- Estado / WS
 function publicConfig() {
-  const { services, wifi, ...rest } = config;
-  return { ...rest, wifi: { ssid: wifi?.ssid || '', hasPassword: !!wifi?.password }, hasUpnp: !!upnp.rc, hasCast: !!upnp.avt, pinRequired: !!ACCESS_PIN };
+  const { services, wifis, activeWifi, ...rest } = config;
+  return { ...rest, wifis: publicWifis(), hasUpnp: !!upnp.rc, hasCast: !!upnp.avt, pinRequired: !!ACCESS_PIN };
 }
 function state() {
   return {
@@ -378,16 +378,38 @@ app.get('/api/qr.png', wrap(async (req, res) => {
   res.setHeader('Content-Type', 'image/png');
   res.send(await QRCode.toBuffer(url, { width: 320, margin: 1 }));
 }));
-// QR de Wi‑Fi / hotspot para invitados (formato estándar que entienden iPhone y Android)
+// QR de Wi‑Fi / hotspot para invitados (formato estándar que entienden iPhone y Android).
+// Se pueden guardar varias redes (p. ej. el hotspot de cada miembro de la casa).
+function publicWifis() {
+  return (config.wifis || []).map((w) => ({ id: w.id, ssid: w.ssid, hasPassword: !!w.password, active: w.id === config.activeWifi }));
+}
 app.post('/api/wifi', wrap(async (req, res) => {
-  config.wifi = { ssid: String(req.body.ssid || '').slice(0, 32), password: String(req.body.password || '').slice(0, 63) };
+  const ssid = String(req.body.ssid || '').trim().slice(0, 32);
+  if (!ssid) throw Object.assign(new Error('Nombre de red requerido'), { status: 400 });
+  const entry = { id: crypto.randomUUID(), ssid, password: String(req.body.password || '').slice(0, 63) };
+  config.wifis = (config.wifis || []).filter((w) => w.ssid !== ssid).concat([entry]).slice(0, 8);
+  config.activeWifi = entry.id;
   configStore.save(config);
   broadcastState();
-  res.json({ ok: true, wifi: { ssid: config.wifi.ssid, hasPassword: !!config.wifi.password } });
+  res.json({ ok: true, wifis: publicWifis() });
+}));
+app.post('/api/wifi/active', wrap(async (req, res) => {
+  if (!(config.wifis || []).some((w) => w.id === req.body.id)) throw Object.assign(new Error('Red no encontrada'), { status: 404 });
+  config.activeWifi = req.body.id;
+  configStore.save(config);
+  broadcastState();
+  res.json({ ok: true, wifis: publicWifis() });
+}));
+app.delete('/api/wifi/:id', wrap(async (req, res) => {
+  config.wifis = (config.wifis || []).filter((w) => w.id !== req.params.id);
+  if (config.activeWifi === req.params.id) config.activeWifi = config.wifis[0]?.id || '';
+  configStore.save(config);
+  broadcastState();
+  res.json({ ok: true, wifis: publicWifis() });
 }));
 app.get('/api/wifi-qr.png', wrap(async (req, res) => {
-  const w = config.wifi || {};
-  if (!w.ssid) return res.status(404).json({ error: 'Sin red configurada' });
+  const w = (config.wifis || []).find((x) => x.id === (req.query.id || config.activeWifi));
+  if (!w) return res.status(404).json({ error: 'Sin red configurada' });
   const escq = (t) => String(t).replace(/([\\;,:"])/g, '\\$1');
   const payload = w.password ? `WIFI:T:WPA;S:${escq(w.ssid)};P:${escq(w.password)};;` : `WIFI:T:nopass;S:${escq(w.ssid)};;`;
   res.setHeader('Content-Type', 'image/png');

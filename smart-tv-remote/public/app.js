@@ -348,15 +348,30 @@
       $('#inviteUrl').textContent = inv.url;
       $('#qr').src = `/api/qr.png?t=${Date.now()}`;
     } catch (_) {}
-    const w = state?.config?.wifi;
-    const has = !!(w && w.ssid);
-    $('#wifiBlock').hidden = !has;
-    if (has) { $('#wifiQr').src = `/api/wifi-qr.png?t=${Date.now()}`; $('#wifiName').textContent = w.ssid; $('#wifiSsid').value = w.ssid; }
-    $('#wifiSetup').open = !has;
+    const wifis = state?.config?.wifis || [];
+    const active = wifis.find((w) => w.active) || wifis[0];
+    $('#wifiBlock').hidden = !active;
+    $('#wifiSetup').open = !active;
+    if (!active) return;
+    $('#wifiQr').src = `/api/wifi-qr.png?id=${active.id}&t=${Date.now()}`;
+    $('#wifiName').textContent = active.ssid;
+    const list = $('#wifiList');
+    list.innerHTML = '';
+    wifis.forEach((w) => {
+      const b = document.createElement('button');
+      b.className = 'fav' + (w.active ? ' primary' : '');
+      b.textContent = w.ssid;
+      b.onclick = () => api('/api/wifi/active', { method: 'POST', body: { id: w.id } }).then(() => setTimeout(refreshInvite, 200)).catch((e) => toast(e.message, 'error'));
+      const d = document.createElement('button');
+      d.className = 'del'; d.textContent = '✕'; d.title = 'Eliminar';
+      d.onclick = (e) => { e.stopPropagation(); api(`/api/wifi/${w.id}`, { method: 'DELETE' }).then(() => setTimeout(refreshInvite, 200)).catch((err) => toast(err.message, 'error')); };
+      b.appendChild(d);
+      list.appendChild(b);
+    });
   }
   $('#btnSaveWifi').onclick = () => {
     api('/api/wifi', { method: 'POST', body: { ssid: $('#wifiSsid').value.trim(), password: $('#wifiPass').value } })
-      .then(() => { $('#wifiPass').value = ''; toast('Red guardada', 'ok'); setTimeout(refreshInvite, 300); })
+      .then(() => { $('#wifiPass').value = ''; $('#wifiSsid').value = ''; toast('Red guardada', 'ok'); setTimeout(refreshInvite, 300); })
       .catch((err) => toast(err.message, 'error'));
   };
   $('#btnShare').onclick = async () => {

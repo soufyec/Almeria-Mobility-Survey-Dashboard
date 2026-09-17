@@ -89,8 +89,8 @@ En la TV, si no aparece el aviso o no responde, revisa:
 
 Funciona igual: el portátil y la TV se conectan al hotspot del iPhone, y los invitados también. Como el
 hotspot suele asignar IPs distintas cada vez, la app **vuelve a buscar la TV automáticamente** si deja de
-responder y actualiza la IP sola. En **Ajustes → Invitar** puedes guardar el nombre y la contraseña del
-hotspot para que aparezca un QR de red: el invitado lo escanea con la cámara, se conecta, y con el segundo
+responder y actualiza la IP sola. En **Ajustes → Invitar** puedes guardar varias redes (el hotspot de cada
+miembro de la casa) y elegir cuál muestra el QR de red: el invitado lo escanea con la cámara, se conecta, y con el segundo
 QR abre el mando. La contraseña se guarda solo en `data/config.json` del portátil.
 
 ## Configuración (variables de entorno)

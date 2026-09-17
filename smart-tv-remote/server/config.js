@@ -14,7 +14,8 @@ const DEFAULTS = {
   remoteName: process.env.REMOTE_NAME || 'Mando Web',
   services: [],
   favorites: [], // { label, keys: ['KEY_1','KEY_2'] }
-  wifi: { ssid: '', password: '' }, // para el QR de invitación (hotspot / Wi‑Fi)
+  wifis: [], // redes guardadas para el QR de invitación: { id, ssid, password }
+  activeWifi: '',
 };
 
 function load() {
